@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Accept your gifts - Happy Birthday Kaif!</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700;800&family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #162638;
+    --blue-base: #86bfee;
+    --blue-dark: #2777dc;
+    --blue-deep: #1d4e9e;
+    --card-ratio: 1024 / 764;
+  }
+
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;
+    overflow: hidden;
+    position: fixed;
+    touch-action: manipulation;
+    font-family: "Nunito", sans-serif;
+    background-color: var(--blue-base);
+    color: var(--ink);
+  }
+
+  .viewport-bg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    background-color: #82bee9;
+    background-image:
+      radial-gradient(#62a5d7 20%, transparent 21%),
+      radial-gradient(#62a5d7 20%, transparent 21%);
+    background-size: 32px 32px;
+    background-position: 0 0, 16px 16px;
+  }
+
+  .fixed-nav {
+    position: fixed;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    pointer-events: auto;
+  }
+
+  .nav-back {
+    top: max(14px, env(safe-area-inset-top));
+    left: max(14px, env(safe-area-inset-left));
+  }
+
+  .nav-music {
+    top: max(14px, env(safe-area-inset-top));
+    right: max(14px, env(safe-area-inset-right));
+  }
+
+  .flat-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    height: 42px;
+    padding: 0 16px;
+    background: #ffffff;
+    color: var(--ink);
+    border: 2.5px solid var(--ink);
+    border-radius: 999px;
+    font-family: "Fredoka", sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    box-shadow: 2.5px 2.5px 0 var(--ink);
+    text-decoration: none;
+    transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.1s ease;
+    user-select: none;
+  }
+
+  .flat-btn:hover {
+    background: #f4faff;
+    transform: translate(-1px, -1px);
+    box-shadow: 3.5px 3.5px 0 var(--ink);
+  }
+
+  .flat-btn:active {
+    transform: translate(2px, 2px);
+    box-shadow: 0 0 0 var(--ink);
+  }
+
+  .stage {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+  }
+
+  .card {
+    width: min(100vw, calc(100dvh * var(--card-ratio)));
+    height: min(100dvh, calc(100vw / var(--card-ratio)));
+    aspect-ratio: var(--card-ratio);
+    position: relative;
+    overflow: hidden;
+    background: #ffffff;
+    container-type: size;
+    border: 3px solid var(--ink);
+    box-shadow: 5px 5px 0 var(--ink);
+  }
+
+  .card-art {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+    user-select: none;
+    pointer-events: none;
+  }
+
+  .no-patch {
+    position: absolute;
+    left: 56.5%;
+    top: 70%;
+    width: 24%;
+    height: 24%;
+    z-index: 2;
+    background-color: #ffffff;
+    background-image: radial-gradient(circle, #6eace6 0 0.78cqw, transparent 0.84cqw);
+    background-size: 4.55cqw 4.55cqw;
+    background-position: 0.4cqw 1.2cqw;
+    pointer-events: none;
+  }
+
+  .choice-btn {
+    position: absolute;
+    z-index: 5;
+    width: 18.5%;
+    height: 16%;
+    border: 3px solid var(--ink);
+    padding: 0;
+    cursor: pointer;
+    color: var(--ink);
+    font-family: "Fredoka", sans-serif;
+    font-weight: 800;
+    font-size: 4.6cqw;
+    letter-spacing: 0.04em;
+    border-radius: 999px;
+    box-shadow: 3.5px 3.5px 0 var(--ink);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    user-select: none;
+  }
+
+  .choice-btn.yes {
+    left: 25.2%;
+    top: 73.5%;
+    background: #79b6e8;
+    transition: transform 0.12s ease, box-shadow 0.12s ease;
+  }
+
+  .choice-btn.yes:hover {
+    background: #6bb0e6;
+    transform: scale(1.05);
+    box-shadow: 4.5px 4.5px 0 var(--ink);
+  }
+
+  .choice-btn.yes:active {
+    transform: translate(2px, 2px);
+    box-shadow: 1px 1px 0 var(--ink);
+  }
+
+  .choice-btn.no {
+    left: 59.4%;
+    top: 73.2%;
+    background: #98caf0;
+    transition: left 0.16s cubic-bezier(0.2, 0.85, 0.25, 1), top 0.16s cubic-bezier(0.2, 0.85, 0.25, 1);
+  }
+
+  .flat-bit {
+    position: absolute;
+    width: var(--w, 1.2cqw);
+    height: var(--h, 1.7cqw);
+    background: var(--c, #ffd24a);
+    border: 1.5px solid var(--ink);
+    border-radius: 2px;
+    opacity: 0;
+    animation: burstFlat 0.95s cubic-bezier(0.12, 0.75, 0.2, 1) forwards;
+  }
+
+  .flat-bit.dot {
+    width: var(--w, 1.1cqw);
+    height: var(--w, 1.1cqw);
+    border-radius: 50%;
+  }
+
+  @keyframes burstFlat {
+    0% { opacity: 0; transform: translate(0, 0) scale(0) rotate(0deg); }
+    20% { opacity: 1; }
+    100% { opacity: 0; transform: translate(var(--x), var(--y)) scale(1) rotate(var(--rot)); }
+  }
+
+  .gifts-note {
+    position: absolute;
+    left: 50%;
+    top: 18%;
+    transform: translateX(-50%) scale(0.6);
+    opacity: 0;
+    z-index: 7;
+    margin: 0;
+    padding: 0.15em 0.8em;
+    background: #ffffff;
+    border: 3px solid var(--ink);
+    border-radius: 999px;
+    font-family: "Fredoka", sans-serif;
+    font-size: 4.5cqw;
+    font-weight: 800;
+    color: var(--blue-deep);
+    white-space: nowrap;
+    pointer-events: none;
+    box-shadow: 3.5px 3.5px 0 var(--ink);
+  }
+
+  .gifts-note.show {
+    animation: notePop 0.5s cubic-bezier(0.18, 1.45, 0.32, 1) forwards;
+  }
+
+  @keyframes notePop {
+    0% { opacity: 0; transform: translateX(-50%) scale(0.6); }
+    100% { opacity: 1; transform: translateX(-50%) scale(1); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .choice-btn.no { transition: none !important; }
+    .flat-bit { display: none !important; }
+    .gifts-note.show { animation: none; opacity: 1; transform: translateX(-50%); }
+  }
+</style>
+</head>
+<body>
+  <div class="viewport-bg" aria-hidden="true"></div>
+
+  <div class="fixed-nav nav-back">
+    <a class="flat-btn nav-back-btn" href="candles.html" id="navBackBtn" aria-label="Go back to cake page">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/>
+      </svg>
+      <span>Back</span>
+    </a>
+  </div>
+
+  <div class="fixed-nav nav-music">
+    <button class="flat-btn music-toggle-btn" id="navMusicBtn" type="button" aria-label="Toggle birthday music" aria-pressed="false">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+      </svg>
+      <span>Music: ON</span>
+    </button>
+  </div>
+
+  <main class="stage">
+    <div class="card" id="card">
+      <img class="card-art" src="gifts-card.jpg" alt="Accept your gifts, Kaif? A kitten in a party hat holds presents beside a photo labeled for Kaif.">
+      <div class="no-patch" aria-hidden="true"></div>
+      <div id="confetti" aria-hidden="true"></div>
+      <button class="choice-btn yes" id="yes" type="button">YES</button>
+      <button class="choice-btn no" id="no" type="button">NO</button>
+      <p class="gifts-note" id="giftsNote">They're all yours, Kaif! 🎉</p>
+    </div>
+  </main>
+
+  <script src="music.js"></script>
+  <script>
+    var yesBtn = document.getElementById("yes");
+    var noBtn = document.getElementById("no");
+    var note = document.getElementById("giftsNote");
+    var confettiLayer = document.getElementById("confetti");
+    var accepted = false;
+
+    var colors = ["#ef4d4d", "#ffd24a", "#3cba78", "#3d86e6", "#f08a24", "#a364f7", "#2ec4c0"];
+
+    function dodge(event) {
+      if (accepted) return;
+      if (event && event.cancelable) event.preventDefault();
+
+      var newX = 8 + Math.random() * 66;
+      var newY = 8 + Math.random() * 62;
+
+      if (newX > 18 && newX < 46 && newY > 58) {
+        newX = Math.random() < 0.5 ? 8 : 72;
+        newY = 14 + Math.random() * 42;
+      }
+
+      noBtn.style.left = newX + "%";
+      noBtn.style.top = newY + "%";
+    }
+
+    function acceptGifts() {
+      if (accepted) return;
+      accepted = true;
+      yesBtn.disabled = true;
+      noBtn.disabled = true;
+
+      for (var i = 0; i < 28; i++) {
+        var bit = document.createElement("i");
+        bit.className = "flat-bit" + (i % 3 === 0 ? " dot" : "");
+        bit.style.left = "34%";
+        bit.style.top = "78%";
+        bit.style.setProperty("--c", colors[i % colors.length]);
+        bit.style.setProperty("--x", ((Math.random() * 40) - 20) + "cqw");
+        bit.style.setProperty("--y", ((Math.random() * -24) - 6) + "cqw");
+        bit.style.setProperty("--rot", (Math.random() * 300) + "deg");
+        confettiLayer.appendChild(bit);
+      }
+
+      note.classList.add("show");
+
+      setTimeout(function () {
+        window.location.href = "choose.html";
+      }, 1100);
+    }
+
+    noBtn.addEventListener("mouseenter", dodge);
+    noBtn.addEventListener("mouseover", dodge);
+    noBtn.addEventListener("pointerdown", dodge);
+    noBtn.addEventListener("touchstart", dodge, { passive: false });
+    noBtn.addEventListener("click", dodge);
+    noBtn.addEventListener("focus", dodge);
+
+    yesBtn.addEventListener("click", acceptGifts);
+  </script>
+</body>
+</html>

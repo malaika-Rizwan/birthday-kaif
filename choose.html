@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Choose your gifts - Happy Birthday Kaif!</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700;800&family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #162638;
+    --blue-base: #86bfee;
+    --blue-dark: #2777dc;
+    --blue-deep: #1d4e9e;
+    --card-ratio: 1024 / 764;
+  }
+
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;
+    overflow: hidden;
+    position: fixed;
+    touch-action: manipulation;
+    font-family: "Nunito", sans-serif;
+    background-color: var(--blue-base);
+    color: var(--ink);
+  }
+
+  .viewport-bg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    background-color: #82bee9;
+    background-image:
+      radial-gradient(#62a5d7 20%, transparent 21%),
+      radial-gradient(#62a5d7 20%, transparent 21%);
+    background-size: 32px 32px;
+    background-position: 0 0, 16px 16px;
+  }
+
+  .fixed-nav {
+    position: fixed;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    pointer-events: auto;
+  }
+
+  .nav-back {
+    top: max(14px, env(safe-area-inset-top));
+    left: max(14px, env(safe-area-inset-left));
+  }
+
+  .nav-music {
+    top: max(14px, env(safe-area-inset-top));
+    right: max(14px, env(safe-area-inset-right));
+  }
+
+  .flat-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    height: 42px;
+    padding: 0 16px;
+    background: #ffffff;
+    color: var(--ink);
+    border: 2.5px solid var(--ink);
+    border-radius: 999px;
+    font-family: "Fredoka", sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    box-shadow: 2.5px 2.5px 0 var(--ink);
+    text-decoration: none;
+    transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.1s ease;
+    user-select: none;
+  }
+
+  .flat-btn:hover {
+    background: #f4faff;
+    transform: translate(-1px, -1px);
+    box-shadow: 3.5px 3.5px 0 var(--ink);
+  }
+
+  .flat-btn:active {
+    transform: translate(2px, 2px);
+    box-shadow: 0 0 0 var(--ink);
+  }
+
+  .stage {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+  }
+
+  .card {
+    width: min(100vw, calc(100dvh * var(--card-ratio)));
+    height: min(100dvh, calc(100vw / var(--card-ratio)));
+    aspect-ratio: var(--card-ratio);
+    position: relative;
+    overflow: hidden;
+    background: #ffffff;
+    container-type: size;
+    border: 3px solid var(--ink);
+    box-shadow: 5px 5px 0 var(--ink);
+  }
+
+  .card-art {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+    user-select: none;
+    pointer-events: none;
+  }
+
+  .gift-target {
+    position: absolute;
+    z-index: 4;
+    border: 3px solid transparent;
+    padding: 0;
+    background: transparent;
+    cursor: pointer;
+    border-radius: 12px;
+    transition: transform 0.12s ease, border-color 0.12s ease, background 0.12s ease;
+  }
+
+  .gift-target:hover {
+    border-color: var(--ink);
+    background: rgba(255, 255, 255, 0.22);
+    transform: scale(1.03);
+  }
+
+  .gift-target:active {
+    transform: scale(0.98);
+  }
+
+  .gift-target:focus-visible {
+    outline: 3px solid var(--blue-deep);
+    border-color: var(--ink);
+  }
+
+  .gift-target.g1 { left: 13%; top: 47%; width: 22%; height: 34%; }
+  .gift-target.g2 { left: 39.5%; top: 41%; width: 21%; height: 40%; }
+  .gift-target.g3 { left: 63%; top: 41%; width: 23%; height: 40%; }
+
+  .gift-badge {
+    position: absolute;
+    z-index: 5;
+    background: #ffffff;
+    color: var(--ink);
+    border: 2px solid var(--ink);
+    border-radius: 999px;
+    padding: 0.15em 0.6em;
+    font-family: "Fredoka", sans-serif;
+    font-size: 1.9cqw;
+    font-weight: 700;
+    box-shadow: 2px 2px 0 var(--ink);
+    pointer-events: none;
+    white-space: nowrap;
+  }
+
+  .badge-g1 { left: 14%; top: 83%; }
+  .badge-g2 { left: 41%; top: 83%; }
+  .badge-g3 { left: 65%; top: 83%; }
+</style>
+</head>
+<body>
+  <div class="viewport-bg" aria-hidden="true"></div>
+
+  <div class="fixed-nav nav-back">
+    <a class="flat-btn nav-back-btn" href="gifts.html" id="navBackBtn" aria-label="Go back to gifts page">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/>
+      </svg>
+      <span>Back</span>
+    </a>
+  </div>
+
+  <div class="fixed-nav nav-music">
+    <button class="flat-btn music-toggle-btn" id="navMusicBtn" type="button" aria-label="Toggle birthday music" aria-pressed="false">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+      </svg>
+      <span>Music: ON</span>
+    </button>
+  </div>
+
+  <main class="stage">
+    <div class="card">
+      <img class="card-art" src="choose-card.jpg" alt="Yay! Choose your gifts, Kaif. An envelope, a bouquet, and stacked presents.">
+      
+      <button class="gift-target g1" id="gift1" type="button" aria-label="Gift 1: The Letter" onclick="location.href='letter.html'"></button>
+      <span class="gift-badge badge-g1">💌 Gift 1: The Letter</span>
+
+      <button class="gift-target g2" id="gift2" type="button" aria-label="Gift 2: The Flowers" onclick="location.href='flowers.html'"></button>
+      <span class="gift-badge badge-g2">💐 Gift 2: The Flowers</span>
+
+      <button class="gift-target g3" id="gift3" type="button" aria-label="Gift 3: The Presents" onclick="location.href='scrapbook.html'"></button>
+      <span class="gift-badge badge-g3">🎁 Gift 3: The Scrapbook</span>
+    </div>
+  </main>
+
+  <script src="music.js"></script>
+</body>
+</html>

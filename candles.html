@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Blow out the Candles - Happy Birthday Kaif!</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700;800&family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #162638;
+    --blue-base: #86bfee;
+    --blue-dark: #2777dc;
+    --blue-deep: #1d4e9e;
+    --card-ratio: 1024 / 764;
+  }
+
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;
+    overflow: hidden;
+    position: fixed;
+    touch-action: manipulation;
+    font-family: "Nunito", sans-serif;
+    background-color: var(--blue-base);
+    color: var(--ink);
+  }
+
+  .viewport-bg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    background-color: #82bee9;
+    background-image:
+      radial-gradient(#62a5d7 20%, transparent 21%),
+      radial-gradient(#62a5d7 20%, transparent 21%);
+    background-size: 32px 32px;
+    background-position: 0 0, 16px 16px;
+  }
+
+  .fixed-nav {
+    position: fixed;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    pointer-events: auto;
+  }
+
+  .nav-back {
+    top: max(14px, env(safe-area-inset-top));
+    left: max(14px, env(safe-area-inset-left));
+  }
+
+  .nav-music {
+    top: max(14px, env(safe-area-inset-top));
+    right: max(14px, env(safe-area-inset-right));
+  }
+
+  .flat-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    height: 42px;
+    padding: 0 16px;
+    background: #ffffff;
+    color: var(--ink);
+    border: 2.5px solid var(--ink);
+    border-radius: 999px;
+    font-family: "Fredoka", sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    box-shadow: 2.5px 2.5px 0 var(--ink);
+    text-decoration: none;
+    transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.1s ease;
+    user-select: none;
+  }
+
+  .flat-btn:hover {
+    background: #f4faff;
+    transform: translate(-1px, -1px);
+    box-shadow: 3.5px 3.5px 0 var(--ink);
+  }
+
+  .flat-btn:active {
+    transform: translate(2px, 2px);
+    box-shadow: 0 0 0 var(--ink);
+  }
+
+  .stage {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+  }
+
+  .card {
+    width: min(100vw, calc(100dvh * var(--card-ratio)));
+    height: min(100dvh, calc(100vw / var(--card-ratio)));
+    aspect-ratio: var(--card-ratio);
+    position: relative;
+    overflow: hidden;
+    background: #ffffff;
+    container-type: size;
+    border: 3px solid var(--ink);
+    box-shadow: 5px 5px 0 var(--ink);
+  }
+
+  .card-art {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+    user-select: none;
+    pointer-events: none;
+  }
+
+  .cake-btn {
+    position: absolute;
+    left: 34.5%;
+    top: 46%;
+    width: 31%;
+    height: 34%;
+    border: 0;
+    padding: 0;
+    background: transparent;
+    border-radius: 46% 46% 42% 42%;
+    cursor: pointer;
+    z-index: 4;
+  }
+
+  .cake-prompt {
+    position: absolute;
+    left: 50%;
+    top: 41%;
+    transform: translateX(-50%);
+    background: #ffffff;
+    color: var(--ink);
+    border: 2.5px solid var(--ink);
+    border-radius: 999px;
+    padding: 0.2em 0.8em;
+    font-family: "Fredoka", sans-serif;
+    font-size: 2.4cqw;
+    font-weight: 700;
+    box-shadow: 2.5px 2.5px 0 var(--ink);
+    pointer-events: none;
+    z-index: 5;
+    animation: floatBounce 1.5s ease-in-out infinite;
+    white-space: nowrap;
+  }
+
+  @keyframes floatBounce {
+    0%, 100% { transform: translateX(-50%) translateY(0); }
+    50% { transform: translateX(-50%) translateY(-6px); }
+  }
+
+  .smoke-puff {
+    position: absolute;
+    width: 2.4cqw;
+    height: 2.4cqw;
+    margin-left: -1.2cqw;
+    border-radius: 50%;
+    background: #ffffff;
+    border: 1.5px solid #8cb1cf;
+    opacity: 0;
+    pointer-events: none;
+    z-index: 6;
+  }
+
+  .blown .smoke-puff {
+    animation: risePuff 1.2s ease-out forwards;
+    animation-delay: var(--d);
+  }
+
+  @keyframes risePuff {
+    0% { opacity: 0; transform: translate(0, 0) scale(0.3); }
+    20% { opacity: 1; transform: translate(0.6cqw, -1cqw) scale(0.9); }
+    100% { opacity: 0; transform: translate(2.5cqw, -5.5cqw) scale(1.6); }
+  }
+
+  .flat-bit {
+    position: absolute;
+    width: var(--w, 1.2cqw);
+    height: var(--h, 1.7cqw);
+    background: var(--c, #ffd24a);
+    border: 1.5px solid var(--ink);
+    border-radius: 2px;
+    opacity: 0;
+    animation: burstFlat 0.95s cubic-bezier(0.12, 0.75, 0.2, 1) forwards;
+    animation-delay: var(--d);
+  }
+
+  .flat-bit.dot {
+    width: var(--w, 1.1cqw);
+    height: var(--w, 1.1cqw);
+    border-radius: 50%;
+  }
+
+  @keyframes burstFlat {
+    0% { opacity: 0; transform: translate(0, 0) scale(0) rotate(0deg); }
+    20% { opacity: 1; }
+    100% { opacity: 0; transform: translate(var(--x), var(--y)) scale(1) rotate(var(--rot)); }
+  }
+
+  .wish-badge {
+    position: absolute;
+    left: 50%;
+    bottom: 5.4%;
+    transform: translateX(-50%) scale(0.5);
+    opacity: 0;
+    z-index: 7;
+    margin: 0;
+    padding: 0.2em 0.9em;
+    background: #ffffff;
+    border: 3px solid var(--ink);
+    border-radius: 999px;
+    font-family: "Fredoka", sans-serif;
+    font-size: 4.4cqw;
+    font-weight: 800;
+    color: var(--blue-deep);
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+    pointer-events: none;
+    box-shadow: 3.5px 3.5px 0 var(--ink);
+  }
+
+  .blown .wish-badge {
+    animation: wishPop 0.65s cubic-bezier(0.18, 1.45, 0.32, 1) 0.75s forwards;
+  }
+
+  @keyframes wishPop {
+    0% { opacity: 0; transform: translateX(-50%) scale(0.5); }
+    100% { opacity: 1; transform: translateX(-50%) scale(1); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .flat-bit, .smoke-puff { display: none !important; }
+    .blown .wish-badge { animation: none; opacity: 1; transform: translateX(-50%); }
+  }
+</style>
+</head>
+<body>
+  <div class="viewport-bg" aria-hidden="true"></div>
+
+  <div class="fixed-nav nav-back">
+    <a class="flat-btn nav-back-btn" href="index.html#opening" id="navBackBtn" aria-label="Go back to opening page">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/>
+      </svg>
+      <span>Back</span>
+    </a>
+  </div>
+
+  <div class="fixed-nav nav-music">
+    <button class="flat-btn music-toggle-btn" id="navMusicBtn" type="button" aria-label="Toggle birthday music" aria-pressed="false">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+      </svg>
+      <span>Music: ON</span>
+    </button>
+  </div>
+
+  <main class="stage">
+    <div class="card" id="card">
+      <img class="card-art" src="cake-card.jpg" alt="Blow out the Candles! Happy Birthday Kaif with dogs and cake">
+      <div id="candleSmokeLayer" aria-hidden="true"></div>
+      <div id="cakeConfettiLayer" aria-hidden="true"></div>
+
+      <div class="cake-prompt" id="cakePrompt">Tap to blow out candles! 🎂</div>
+      <button class="cake-btn" id="cake" type="button" aria-label="Blow out the candles"></button>
+      <p class="wish-badge" id="wishBadge">Make a wish, Kaif!</p>
+    </div>
+  </main>
+
+  <script src="music.js"></script>
+  <script>
+    var card = document.getElementById("card");
+    var cake = document.getElementById("cake");
+    var cakePrompt = document.getElementById("cakePrompt");
+    var smokeLayer = document.getElementById("candleSmokeLayer");
+    var confettiLayer = document.getElementById("cakeConfettiLayer");
+
+    var spots = [
+      { x: 43.0, y: 54.6 },
+      { x: 45.6, y: 54.2 },
+      { x: 48.2, y: 54.5 },
+      { x: 50.9, y: 54.1 },
+      { x: 53.5, y: 54.4 },
+      { x: 56.2, y: 54.0 },
+      { x: 58.8, y: 54.5 }
+    ];
+
+    spots.forEach(function (spot, index) {
+      var node = document.createElement("span");
+      node.className = "smoke-puff";
+      node.style.left = spot.x + "%";
+      node.style.top = spot.y + "%";
+      node.style.setProperty("--d", (index * 0.08) + "s");
+      smokeLayer.appendChild(node);
+    });
+
+    var colors = ["#ef4d4d", "#ffd24a", "#3cba78", "#3d86e6", "#f08a24", "#a364f7", "#2ec4c0"];
+
+    function blowOut() {
+      if (card.classList.contains("blown")) return;
+      card.classList.add("blown");
+      cake.disabled = true;
+      cakePrompt.style.display = "none";
+
+      for (var i = 0; i < 30; i++) {
+        var bit = document.createElement("i");
+        bit.className = "flat-bit" + (i % 3 === 0 ? " dot" : "");
+        bit.style.left = (42 + Math.random() * 18) + "%";
+        bit.style.top = "56%";
+        bit.style.setProperty("--c", colors[i % colors.length]);
+        bit.style.setProperty("--x", ((Math.random() * 38) - 19) + "cqw");
+        bit.style.setProperty("--y", ((Math.random() * -24) - 4) + "cqw");
+        bit.style.setProperty("--rot", (Math.random() * 260 - 50) + "deg");
+        bit.style.setProperty("--d", (Math.random() * 0.12) + "s");
+        confettiLayer.appendChild(bit);
+      }
+
+      setTimeout(function () {
+        window.location.href = "gifts.html";
+      }, 2400);
+    }
+
+    cake.addEventListener("click", blowOut);
+  </script>
+</body>
+</html>

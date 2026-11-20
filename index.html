@@ -1,0 +1,1611 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#2777dc">
+<meta name="color-scheme" content="light">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Birthday Kaif">
+<meta name="application-name" content="Birthday Kaif">
+<meta name="description" content="A festive full-screen birthday experience for Kaif.">
+<title>Happy Birthday Kaif!</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700;800&family=Luckiest+Guy&family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #162638;
+    --blue-base: #86bfee;
+    --blue-dark: #2777dc;
+    --blue-deep: #1d4e9e;
+    /* Use a single number so calc() stays correct on every browser */
+    --card-ratio: 1.3350785340314; /* 1024 / 764 */
+    --arrive-time: 3.6s;
+    --bloom-time: 4.0s;
+  }
+
+  * {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    position: fixed;
+    inset: 0;
+    touch-action: manipulation;
+    overscroll-behavior: none;
+    -webkit-user-select: none;
+    user-select: none;
+    font-family: "Nunito", sans-serif;
+    background-color: var(--blue-base);
+    color: var(--ink);
+  }
+
+  body {
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
+  }
+
+  /* Full screen 2D flat background with crisp polka dots */
+  .viewport-bg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    background-color: #82bee9;
+    background-image:
+      radial-gradient(#62a5d7 20%, transparent 21%),
+      radial-gradient(#62a5d7 20%, transparent 21%);
+    background-size: 32px 32px;
+    background-position: 0 0, 16px 16px;
+  }
+
+  /* Fixed Navigation UI (Back button and Music toggle) */
+  .fixed-nav {
+    position: fixed;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    pointer-events: auto;
+  }
+
+  .nav-back {
+    top: max(14px, env(safe-area-inset-top));
+    left: max(14px, env(safe-area-inset-left));
+  }
+
+  .nav-music {
+    top: max(14px, env(safe-area-inset-top));
+    right: max(14px, env(safe-area-inset-right));
+  }
+
+  .flat-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    height: 42px;
+    padding: 0 16px;
+    background: #ffffff;
+    color: var(--ink);
+    border: 2.5px solid var(--ink);
+    border-radius: 999px;
+    font-family: "Fredoka", sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    box-shadow: 2.5px 2.5px 0 var(--ink);
+    transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.1s ease;
+    user-select: none;
+  }
+
+  .flat-btn:hover {
+    background: #f4faff;
+    transform: translate(-1px, -1px);
+    box-shadow: 3.5px 3.5px 0 var(--ink);
+  }
+
+  .flat-btn:active {
+    transform: translate(2px, 2px);
+    box-shadow: 0 0 0 var(--ink);
+  }
+
+  .flat-btn:focus-visible {
+    outline: 3px solid var(--blue-dark);
+    outline-offset: 2px;
+  }
+
+  .flat-btn svg {
+    flex-shrink: 0;
+  }
+
+  .nav-back-btn {
+    display: none; /* hidden on opening page */
+  }
+
+  /* Banners fill the entire screen, edge to edge */
+  .stage {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    padding: 0;
+  }
+
+  .card {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    overflow: hidden;
+    background: #ffffff;
+    container-type: size;
+    border: 0;
+    box-shadow: none;
+  }
+
+  /* Views Management */
+  .view {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: none;
+    overflow: hidden;
+  }
+
+  .view.active {
+    display: block;
+  }
+
+  .card-art {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    /* Stretch the full banner across the whole screen (no crop, no side gaps) */
+    object-fit: fill;
+    display: block;
+    user-select: none;
+    pointer-events: none;
+  }
+
+  /* ========================================================
+     PAGE 1: OPENING CARD (Stripes, Polka dots, Frame, Bloom)
+     ======================================================== */
+  .gutter {
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 6.2%;
+    background-color: #ffffff;
+    background-image: radial-gradient(circle, #4b9fe0 0 0.42cqw, transparent 0.46cqw);
+    background-size: 1.55cqw 1.55cqw;
+    background-position: 0.4cqw 0.5cqw;
+    z-index: 1;
+    border-right: 2px solid var(--ink);
+  }
+
+  .stripes {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 6.2%;
+    width: 40.5%;
+    background: repeating-linear-gradient(
+      90deg,
+      #3d97e4 0 2.05cqw,
+      #ffffff 2.05cqw 3.85cqw
+    );
+    z-index: 0;
+    border-right: 2px solid var(--ink);
+  }
+
+  .field {
+    position: absolute;
+    inset: 0 0 0 46.7%;
+    background-color: #ffffff;
+    background-image: radial-gradient(circle, #4b9fe0 0 0.78cqw, transparent 0.84cqw);
+    background-size: 4.35cqw 4.35cqw;
+    background-position: 1.2cqw 0.8cqw;
+    z-index: 0;
+  }
+
+  .gingham {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    width: 32%;
+    height: 34%;
+    z-index: 1;
+    background: repeating-conic-gradient(#5aa6ea 0% 25%, #ffffff 0% 50%) 0 0 / 2.15cqw 2.15cqw;
+    clip-path: polygon(
+      0 62%,
+      8% 54%,
+      16% 58%,
+      24% 46%,
+      34% 52%,
+      44% 38%,
+      54% 46%,
+      64% 32%,
+      74% 40%,
+      84% 28%,
+      94% 36%,
+      100% 26%,
+      100% 100%,
+      0 100%
+    );
+    border-top: 2px solid var(--ink);
+    border-left: 2px solid var(--ink);
+  }
+
+  /* Bunting banner */
+  .bunting {
+    position: absolute;
+    left: 46%;
+    right: 0;
+    top: 2.4%;
+    height: 24%;
+    z-index: 2;
+    pointer-events: none;
+  }
+
+  .string {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  .flag {
+    position: absolute;
+    width: 8.6%;
+    aspect-ratio: 1 / 1.2;
+    transform: translateX(-50%);
+    clip-path: polygon(6% 0, 94% 0, 50% 100%);
+    border-top: 2px solid var(--ink);
+  }
+
+  .f1 { left: 6%; top: 22%; background: repeating-linear-gradient(90deg, #2ec4c0 0 28%, #ffe56a 0 58%, #2ec4c0 0 100%); }
+  .f2 { left: 15.5%; top: 30%; background: #ffd24a; }
+  .f3 { left: 25%; top: 36%; background: #3cba78; }
+  .f4 { left: 34.5%; top: 40%; background: #3d86e6; }
+  .f5 { left: 44%; top: 42%; background: #ef4d4d; }
+  .f6 { left: 53.5%; top: 40%; background: repeating-linear-gradient(90deg, #7eb6f5 0 32%, #fff 0 62%, #7eb6f5 0 100%); }
+  .f7 { left: 63%; top: 36%; background: #2f9f90; }
+  .f8 { left: 72.5%; top: 30%; background: repeating-linear-gradient(135deg, #ffd24a 0 30%, #f08a24 0 62%, #ffd24a 0 100%); }
+  .f9 { left: 82%; top: 24%; background: repeating-linear-gradient(90deg, #f08a24 0 30%, #ffe56a 0 60%, #f08a24 0 100%); }
+  .f10 { left: 91.5%; top: 18%; background: #3d86e6; }
+
+  /* Background 2D flat star sparks */
+  .spark {
+    position: absolute;
+    z-index: 2;
+    width: 1.5cqw;
+    height: 1.5cqw;
+  }
+
+  /* Photo Frame: slides in slowly from top-right corner, settles on the left */
+  .picture {
+    position: absolute;
+    left: 3.2%;
+    top: 3%;
+    width: 48%;
+    height: 94%;
+    z-index: 4;
+    transform: translate(122%, -25%) rotate(12deg) scale(0.62);
+    animation: arriveFrame var(--arrive-time) cubic-bezier(0.25, 0.1, 0.25, 1) 0.2s forwards;
+  }
+
+  @keyframes arriveFrame {
+    0% {
+      transform: translate(122%, -25%) rotate(12deg) scale(0.62);
+    }
+    82% {
+      transform: translate(1.5%, 1.2%) rotate(0deg) scale(0.99);
+    }
+    100% {
+      transform: translate(0, 0) rotate(-1.5deg) scale(1);
+    }
+  }
+
+  .frame {
+    position: absolute;
+    left: 13%;
+    top: 8%;
+    width: 78%;
+    height: 84%;
+  }
+
+  .scallop {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+
+  .shot-wrap {
+    position: absolute;
+    left: 8.5%;
+    top: 7.2%;
+    right: 8.5%;
+    bottom: 7.2%;
+    overflow: hidden;
+    background: #efe8e1;
+    z-index: 1;
+    border: 2px solid var(--ink);
+  }
+
+  .shot {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: 46% 36%;
+    transform: scale(1.85);
+    transform-origin: 46% 34%;
+    display: block;
+  }
+
+  .stars {
+    position: absolute;
+    left: 1%;
+    top: 2%;
+    width: 28%;
+    height: auto;
+    z-index: 5;
+    overflow: visible;
+  }
+
+  .mini {
+    position: absolute;
+    z-index: 3;
+    width: 4.2%;
+    height: auto;
+    overflow: visible;
+  }
+
+  .myboy {
+    position: absolute;
+    right: -1%;
+    top: 1%;
+    width: 46%;
+    height: auto;
+    overflow: visible;
+    transform: rotate(16deg);
+    z-index: 3;
+  }
+
+  .camera {
+    position: absolute;
+    right: -2%;
+    bottom: 3%;
+    width: 24%;
+    height: auto;
+    z-index: 5;
+    transform: rotate(-8deg);
+  }
+
+  /* Greeting: HAPPY BIRTHDAY blooms out after the frame lands */
+  .greeting {
+    position: absolute;
+    left: 46.5%;
+    width: 52%;
+    top: 22%;
+    height: 54%;
+    z-index: 5;
+    pointer-events: none;
+  }
+
+  .greeting-inner {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    transform: rotate(-4deg);
+    gap: 0.6cqw;
+  }
+
+  .happy-line {
+    display: flex;
+    gap: 0.65cqw;
+    z-index: 2;
+    transform: scale(0);
+    opacity: 0;
+    animation: flatBloom 0.75s cubic-bezier(0.18, 1.35, 0.32, 1) var(--bloom-time) forwards;
+  }
+
+  .tile {
+    font-family: "Luckiest Guy", sans-serif;
+    font-size: 5.6cqw;
+    line-height: 1;
+    color: #ffffff;
+    padding: 0.12em 0.22em 0.08em;
+    border-radius: 0.18em;
+    border: 2.5px solid var(--ink);
+    box-shadow: 2.5px 2.5px 0 var(--ink);
+    display: inline-block;
+  }
+
+  .tile:nth-child(1) { background: #3d86e6; transform: rotate(-3deg); }
+  .tile:nth-child(2) { background: #ffd24a; color: var(--ink); transform: rotate(2.5deg); }
+  .tile:nth-child(3) { background: #ef4d4d; transform: rotate(-3deg); }
+  .tile:nth-child(4) { background: #3cba78; transform: rotate(2deg); }
+  .tile:nth-child(5) { background: #a364f7; transform: rotate(-2.5deg); }
+
+  .bday-line {
+    font-family: "Luckiest Guy", sans-serif;
+    font-size: 8.0cqw;
+    line-height: 0.88;
+    letter-spacing: 0.015em;
+    color: #2b7de9;
+    -webkit-text-stroke: 2.6px var(--ink);
+    paint-order: stroke fill;
+    text-shadow: 3.5px 3.5px 0 var(--ink);
+    padding: 0 0.15em;
+    z-index: 2;
+    transform: scale(0);
+    opacity: 0;
+    animation: flatBloom 0.85s cubic-bezier(0.18, 1.4, 0.32, 1) calc(var(--bloom-time) + 0.18s) forwards;
+  }
+
+  @keyframes flatBloom {
+    0% {
+      transform: scale(0.1);
+      opacity: 0;
+    }
+    65% {
+      transform: scale(1.18);
+      opacity: 1;
+    }
+    85% {
+      transform: scale(0.96);
+      opacity: 1;
+    }
+    100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+
+  .popper {
+    position: absolute;
+    width: 9.6cqw;
+    height: auto;
+    overflow: visible;
+    z-index: 3;
+    transform: scale(0);
+    opacity: 0;
+    animation: flatBloom 0.75s cubic-bezier(0.18, 1.35, 0.32, 1) var(--bloom-time) forwards;
+  }
+
+  .popper.left { left: -2%; top: 6%; }
+  .popper.right { right: -3%; top: 4%; }
+
+  /* Sharp 2D flat confetti burst (no blur, no glow) */
+  .flat-bit {
+    position: absolute;
+    left: 50%;
+    top: 48%;
+    width: var(--w, 1.2cqw);
+    height: var(--h, 1.7cqw);
+    background: var(--c, #ffd24a);
+    border: 1.5px solid var(--ink);
+    border-radius: 2px;
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0);
+    animation: burstFlat 0.85s cubic-bezier(0.12, 0.8, 0.22, 1) calc(var(--bloom-time) + var(--d, 0s)) forwards;
+  }
+
+  .flat-bit.dot {
+    width: var(--w, 1.1cqw);
+    height: var(--w, 1.1cqw);
+    border-radius: 50%;
+  }
+
+  .flat-bit.star {
+    width: var(--w, 1.8cqw);
+    height: var(--w, 1.8cqw);
+    border: none;
+    clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+  }
+
+  @keyframes burstFlat {
+    0% {
+      opacity: 0;
+      transform: translate(-50%, -50%) scale(0) rotate(0deg);
+    }
+    25% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 1;
+      transform: translate(calc(-50% + var(--x)), calc(-50% + var(--y))) rotate(var(--rot)) scale(1);
+    }
+  }
+
+  /* Skip / Next Button on Opening Card */
+  .skip-btn {
+    position: absolute;
+    right: 2.5%;
+    bottom: 2.8%;
+    z-index: 8;
+    background: #ffffff;
+    color: var(--ink);
+    border: 2.5px solid var(--ink);
+    border-radius: 999px;
+    padding: 0.5cqw 1.4cqw;
+    font-family: "Fredoka", sans-serif;
+    font-size: 1.8cqw;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 2.5px 2.5px 0 var(--ink);
+    opacity: 0;
+    animation: showFlatBtn 0.4s ease calc(var(--bloom-time) + 0.8s) forwards;
+  }
+
+  @keyframes showFlatBtn {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ========================================================
+     PAGE 2: CAKE PAGE (Candles, Smoke, Confetti, Wish)
+     ======================================================== */
+  .cake-btn {
+    position: absolute;
+    left: 34.5%;
+    top: 46%;
+    width: 31%;
+    height: 34%;
+    border: 0;
+    padding: 0;
+    background: transparent;
+    border-radius: 46% 46% 42% 42%;
+    cursor: pointer;
+    z-index: 4;
+  }
+
+  .cake-btn:focus-visible {
+    outline: 3px solid var(--blue-deep);
+    outline-offset: 3px;
+  }
+
+  /* Cute flat 2D invitation prompt */
+  .cake-prompt {
+    position: absolute;
+    left: 50%;
+    top: 41%;
+    transform: translateX(-50%);
+    background: #ffffff;
+    color: var(--ink);
+    border: 2.5px solid var(--ink);
+    border-radius: 999px;
+    padding: 0.2em 0.8em;
+    font-family: "Fredoka", sans-serif;
+    font-size: 2.4cqw;
+    font-weight: 700;
+    box-shadow: 2.5px 2.5px 0 var(--ink);
+    pointer-events: none;
+    z-index: 5;
+    animation: floatBounce 1.5s ease-in-out infinite;
+    white-space: nowrap;
+  }
+
+  @keyframes floatBounce {
+    0%, 100% { transform: translateX(-50%) translateY(0); }
+    50% { transform: translateX(-50%) translateY(-6px); }
+  }
+
+  /* 2D Flat Cartoon Smoke Puffs (solid white, clean outline, NO blur) */
+  .smoke-puff {
+    position: absolute;
+    width: 2.4cqw;
+    height: 2.4cqw;
+    margin-left: -1.2cqw;
+    border-radius: 50%;
+    background: #ffffff;
+    border: 1.5px solid #8cb1cf;
+    opacity: 0;
+    pointer-events: none;
+    z-index: 6;
+  }
+
+  .blown .smoke-puff {
+    animation: risePuff 1.2s ease-out forwards;
+    animation-delay: var(--d);
+  }
+
+  @keyframes risePuff {
+    0% {
+      opacity: 0;
+      transform: translate(0, 0) scale(0.3);
+    }
+    20% {
+      opacity: 1;
+      transform: translate(0.6cqw, -1cqw) scale(0.9);
+    }
+    100% {
+      opacity: 0;
+      transform: translate(2.5cqw, -5.5cqw) scale(1.6);
+    }
+  }
+
+  /* "Make a wish, Kaif!" Flat 2D Badge */
+  .wish-badge {
+    position: absolute;
+    left: 50%;
+    bottom: 5.4%;
+    transform: translateX(-50%) scale(0.5);
+    opacity: 0;
+    z-index: 7;
+    margin: 0;
+    padding: 0.2em 0.9em;
+    background: #ffffff;
+    border: 3px solid var(--ink);
+    border-radius: 999px;
+    font-family: "Fredoka", sans-serif;
+    font-size: 4.4cqw;
+    font-weight: 800;
+    color: var(--blue-deep);
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+    pointer-events: none;
+    box-shadow: 3.5px 3.5px 0 var(--ink);
+  }
+
+  .blown .wish-badge {
+    animation: wishPop 0.65s cubic-bezier(0.18, 1.45, 0.32, 1) 0.75s forwards;
+  }
+
+  @keyframes wishPop {
+    0% { opacity: 0; transform: translateX(-50%) scale(0.5); }
+    100% { opacity: 1; transform: translateX(-50%) scale(1); }
+  }
+
+  /* ========================================================
+     PAGE 3: GIFTS PAGE (YES accepts, NO slips away)
+     ======================================================== */
+  .no-patch {
+    position: absolute;
+    left: 56.5%;
+    top: 70%;
+    width: 24%;
+    height: 24%;
+    z-index: 2;
+    background-color: #ffffff;
+    background-image: radial-gradient(circle, #6eace6 0 0.78cqw, transparent 0.84cqw);
+    background-size: 4.55cqw 4.55cqw;
+    background-position: 0.4cqw 1.2cqw;
+    pointer-events: none;
+  }
+
+  .choice-btn {
+    position: absolute;
+    z-index: 5;
+    width: 18.5%;
+    height: 16%;
+    border: 3px solid var(--ink);
+    padding: 0;
+    cursor: pointer;
+    color: var(--ink);
+    font-family: "Fredoka", sans-serif;
+    font-weight: 800;
+    font-size: 4.6cqw;
+    letter-spacing: 0.04em;
+    border-radius: 999px;
+    box-shadow: 3.5px 3.5px 0 var(--ink);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    user-select: none;
+  }
+
+  .choice-btn.yes {
+    left: 25.2%;
+    top: 73.5%;
+    background: #79b6e8;
+    transition: transform 0.12s ease, box-shadow 0.12s ease;
+  }
+
+  .choice-btn.yes:hover {
+    background: #6bb0e6;
+    transform: scale(1.05);
+    box-shadow: 4.5px 4.5px 0 var(--ink);
+  }
+
+  .choice-btn.yes:active {
+    transform: translate(2px, 2px);
+    box-shadow: 1px 1px 0 var(--ink);
+  }
+
+  .choice-btn.no {
+    left: 59.4%;
+    top: 73.2%;
+    background: #98caf0;
+    transition: left 0.16s cubic-bezier(0.2, 0.85, 0.25, 1), top 0.16s cubic-bezier(0.2, 0.85, 0.25, 1);
+  }
+
+  .choice-btn.no:hover {
+    background: #a9d4f5;
+  }
+
+  .gifts-note {
+    position: absolute;
+    left: 50%;
+    top: 18%;
+    transform: translateX(-50%) scale(0.6);
+    opacity: 0;
+    z-index: 7;
+    margin: 0;
+    padding: 0.15em 0.8em;
+    background: #ffffff;
+    border: 3px solid var(--ink);
+    border-radius: 999px;
+    font-family: "Fredoka", sans-serif;
+    font-size: 4.5cqw;
+    font-weight: 800;
+    color: var(--blue-deep);
+    white-space: nowrap;
+    pointer-events: none;
+    box-shadow: 3.5px 3.5px 0 var(--ink);
+  }
+
+  .gifts-note.show {
+    animation: wishPop 0.5s cubic-bezier(0.18, 1.45, 0.32, 1) forwards;
+  }
+
+  /* ========================================================
+     PAGE 4: CHOOSE GIFTS PAGE (3 Choices with flat outlines)
+     ======================================================== */
+  .gift-target {
+    position: absolute;
+    z-index: 4;
+    border: 3px solid transparent;
+    padding: 0;
+    background: transparent;
+    cursor: pointer;
+    border-radius: 12px;
+    transition: transform 0.12s ease, border-color 0.12s ease, background 0.12s ease;
+  }
+
+  .gift-target:hover {
+    border-color: var(--ink);
+    background: rgba(255, 255, 255, 0.22);
+    transform: scale(1.03);
+  }
+
+  .gift-target:active {
+    transform: scale(0.98);
+  }
+
+  .gift-target:focus-visible {
+    outline: 3px solid var(--blue-deep);
+    border-color: var(--ink);
+  }
+
+  .gift-target.g1 { left: 13%; top: 47%; width: 22%; height: 34%; }
+  .gift-target.g2 { left: 39.5%; top: 41%; width: 21%; height: 40%; }
+  .gift-target.g3 { left: 63%; top: 41%; width: 23%; height: 40%; }
+
+  /* Flat 2D Gift Badges */
+  .gift-badge {
+    position: absolute;
+    z-index: 5;
+    background: #ffffff;
+    color: var(--ink);
+    border: 2px solid var(--ink);
+    border-radius: 999px;
+    padding: 0.15em 0.6em;
+    font-family: "Fredoka", sans-serif;
+    font-size: 1.9cqw;
+    font-weight: 700;
+    box-shadow: 2px 2px 0 var(--ink);
+    pointer-events: none;
+    white-space: nowrap;
+  }
+
+  .badge-g1 { left: 14%; top: 83%; }
+  .badge-g2 { left: 41%; top: 83%; }
+  .badge-g3 { left: 65%; top: 83%; }
+
+  /* Audio unlock prompt on first page if sound waiting */
+  .sound-hint {
+    position: absolute;
+    left: 50%;
+    bottom: 2.8%;
+    transform: translateX(-50%);
+    background: #ffffff;
+    color: var(--ink);
+    border: 2px solid var(--ink);
+    border-radius: 999px;
+    padding: 0.3em 0.9em;
+    font-family: "Fredoka", sans-serif;
+    font-size: 1.8cqw;
+    font-weight: 700;
+    box-shadow: 2px 2px 0 var(--ink);
+    z-index: 9;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    animation: floatBounce 2s ease-in-out infinite;
+  }
+
+  /* Mobile app layout: larger taps, safe areas, readable controls */
+  @media (max-width: 900px), (pointer: coarse) {
+    .flat-btn {
+      min-height: 44px;
+      height: 44px;
+      padding: 0 14px;
+      font-size: 14px;
+    }
+
+    .nav-back {
+      top: max(10px, env(safe-area-inset-top));
+      left: max(10px, env(safe-area-inset-left));
+    }
+
+    .nav-music {
+      top: max(10px, env(safe-area-inset-top));
+      right: max(10px, env(safe-area-inset-right));
+    }
+
+    .skip-btn {
+      right: max(2.5%, env(safe-area-inset-right));
+      bottom: max(2.8%, env(safe-area-inset-bottom));
+      min-height: 44px;
+      padding: 10px 16px;
+      font-size: clamp(13px, 3.4vw, 16px);
+    }
+
+    .sound-hint {
+      left: 50%;
+      bottom: max(8%, env(safe-area-inset-bottom));
+      font-size: clamp(12px, 3.2vw, 15px);
+      padding: 10px 14px;
+      white-space: normal;
+      text-align: center;
+      max-width: 80vw;
+    }
+
+    .cake-btn {
+      left: 30%;
+      top: 44%;
+      width: 40%;
+      height: 38%;
+    }
+
+    .cake-prompt {
+      font-size: clamp(12px, 3.4vw, 16px);
+      top: 39%;
+    }
+
+    .choice-btn {
+      width: 28%;
+      height: 14%;
+      min-height: 52px;
+      font-size: clamp(18px, 6vw, 28px);
+    }
+
+    .choice-btn.yes {
+      left: 18%;
+      top: 74%;
+    }
+
+    .choice-btn.no {
+      left: 54%;
+      top: 74%;
+    }
+
+    .gift-target.g1,
+    .gift-target.g2,
+    .gift-target.g3 {
+      min-width: 26%;
+      min-height: 30%;
+    }
+
+    .gift-target.g1 { left: 8%; width: 28%; }
+    .gift-target.g2 { left: 36%; width: 28%; }
+    .gift-target.g3 { left: 64%; width: 28%; }
+
+    .gift-badge {
+      font-size: clamp(11px, 3vw, 14px);
+      padding: 4px 8px;
+    }
+
+    .wish-badge,
+    .gifts-note {
+      font-size: clamp(14px, 4.2vw, 20px);
+      max-width: 90vw;
+      white-space: normal;
+      text-align: center;
+    }
+  }
+
+  .install-banner {
+    position: fixed;
+    left: 50%;
+    bottom: max(16px, env(safe-area-inset-bottom));
+    transform: translateX(-50%);
+    z-index: 10000;
+    display: none;
+    align-items: center;
+    gap: 10px;
+    max-width: min(92vw, 420px);
+    padding: 12px 14px;
+    background: #ffffff;
+    border: 2.5px solid var(--ink);
+    border-radius: 18px;
+    box-shadow: 3px 3px 0 var(--ink);
+    font-family: "Fredoka", sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  .install-banner.show {
+    display: flex;
+  }
+
+  .install-banner button {
+    border: 2px solid var(--ink);
+    background: #79b6e8;
+    color: var(--ink);
+    border-radius: 999px;
+    padding: 8px 12px;
+    font-family: "Fredoka", sans-serif;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  .install-banner .dismiss {
+    background: #ffffff;
+  }
+
+  @media (max-width: 600px) and (orientation: portrait) {
+    .flat-btn span {
+      display: none;
+    }
+
+    .flat-btn {
+      width: 44px;
+      padding: 0;
+    }
+  }
+
+  @media (display-mode: standalone), (display-mode: fullscreen) {
+    .nav-back {
+      top: max(16px, env(safe-area-inset-top));
+    }
+    .nav-music {
+      top: max(16px, env(safe-area-inset-top));
+    }
+  }
+
+  .app-frame {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+  }
+
+  /*
+    Phones held upright: rotate the whole experience into landscape
+    so banners always appear horizontal.
+  */
+  @media (max-width: 1024px) and (orientation: portrait) {
+    html, body {
+      width: 100vw;
+      height: 100vh;
+      height: 100dvh;
+      background-color: #000000;
+    }
+
+    .app-frame {
+      top: 0;
+      left: 0;
+      width: 100vh;
+      height: 100vw;
+      width: 100dvh;
+      height: 100dvw;
+      transform: rotate(90deg) translateY(-100%);
+      transform-origin: top left;
+    }
+
+    .fixed-nav {
+      position: absolute;
+    }
+  }
+
+  @media (max-width: 1024px) and (orientation: landscape) {
+    .app-frame {
+      transform: none;
+      width: 100%;
+      height: 100%;
+    }
+  }
+
+  .rotate-hint {
+    display: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .picture {
+      animation: none !important;
+      transform: rotate(-1.5deg) scale(1) !important;
+    }
+    .happy-line, .bday-line, .popper {
+      animation: none !important;
+      transform: none !important;
+      opacity: 1 !important;
+    }
+    .flat-bit, .smoke-puff {
+      display: none !important;
+    }
+    .choice-btn.no {
+      transition: none !important;
+    }
+  }
+</style>
+</head>
+<body>
+  <div class="app-frame" id="appFrame">
+
+  <!-- Fullscreen 2D Pattern Background -->
+  <div class="viewport-bg" aria-hidden="true"></div>
+
+  <div class="install-banner" id="installBanner" role="dialog" aria-label="Install birthday app">
+    <span>Install this birthday site on your phone</span>
+    <button type="button" id="installBtn">Install</button>
+    <button type="button" class="dismiss" id="installDismiss">Later</button>
+  </div>
+
+  <!-- Fixed Top-Left Back Button -->
+  <div class="fixed-nav nav-back">
+    <button class="flat-btn nav-back-btn" id="navBackBtn" type="button" aria-label="Go back to previous page">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/>
+      </svg>
+      <span>Back</span>
+    </button>
+  </div>
+
+  <!-- Fixed Top-Right Music Mute Button -->
+  <div class="fixed-nav nav-music">
+    <button class="flat-btn music-toggle-btn" id="navMusicBtn" type="button" aria-label="Toggle birthday music" aria-pressed="false">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+      </svg>
+      <span>Music: ON</span>
+    </button>
+  </div>
+
+  <!-- Main Responsive Stage -->
+  <main class="stage">
+    <div class="card" id="cardContainer">
+
+      <!-- ==========================================
+           VIEW 1: OPENING CARD
+           ========================================== -->
+      <section class="view active" id="view-opening" aria-label="Opening Birthday Card">
+        <div class="stripes" aria-hidden="true"></div>
+        <div class="gutter" aria-hidden="true"></div>
+        <div class="field" aria-hidden="true"></div>
+        <div class="gingham" aria-hidden="true"></div>
+
+        <!-- Festive bunting flags banner -->
+        <div class="bunting" aria-hidden="true">
+          <svg class="string" viewBox="0 0 100 40" preserveAspectRatio="none">
+            <path d="M0,12 Q50,34 100,10" fill="none" stroke="#162638" stroke-width="2.2" stroke-linecap="round"/>
+          </svg>
+          <span class="flag f1"></span>
+          <span class="flag f2"></span>
+          <span class="flag f3"></span>
+          <span class="flag f4"></span>
+          <span class="flag f5"></span>
+          <span class="flag f6"></span>
+          <span class="flag f7"></span>
+          <span class="flag f8"></span>
+          <span class="flag f9"></span>
+          <span class="flag f10"></span>
+        </div>
+
+        <!-- Flat 2D stars in background -->
+        <svg class="spark" style="left:49%; top:16%" viewBox="0 0 20 20" aria-hidden="true">
+          <path d="M10 0 L11.4 8.2 L20 10 L11.4 11.8 L10 20 L8.6 11.8 L0 10 L8.6 8.2 Z" fill="#2777dc" stroke="#162638" stroke-width="1.2"/>
+        </svg>
+        <svg class="spark" style="left:58%; top:8%; width:1.2cqw; height:1.2cqw" viewBox="0 0 20 20" aria-hidden="true">
+          <path d="M10 0 L11.4 8.2 L20 10 L11.4 11.8 L10 20 L8.6 11.8 L0 10 L8.6 8.2 Z" fill="#ffd24a" stroke="#162638" stroke-width="1.2"/>
+        </svg>
+        <svg class="spark" style="left:9%; top:6%" viewBox="0 0 20 20" aria-hidden="true">
+          <path d="M10 0 L11.6 8 L20 10 L11.6 12 L10 20 L8.4 12 L0 10 L8.4 8 Z" fill="#2a5eae" stroke="#162638" stroke-width="1.2"/>
+        </svg>
+
+        <!-- Kaif's sliding photo frame -->
+        <div class="picture" id="pictureFrame">
+          <svg class="stars" viewBox="0 0 150 130" aria-hidden="true">
+            <polygon points="52,8 63,40 98,40 70,60 80,94 52,74 24,94 34,60 6,40 41,40" fill="#ffd24a" stroke="#162638" stroke-width="3" stroke-linejoin="round"/>
+            <polygon points="98,28 106,50 130,50 111,64 118,86 98,72 78,86 85,64 66,50 90,50" fill="#3e86d8" stroke="#162638" stroke-width="2.5" stroke-linejoin="round" transform="rotate(18 98 57)"/>
+          </svg>
+
+          <div class="frame">
+            <svg class="scallop" viewBox="0 0 200 280" aria-hidden="true">
+              <path fill="#ffffff" stroke="#162638" stroke-width="3" stroke-linejoin="round" d="M 18 18 Q 27.1 7.0 36.2 18.0 Q 45.3 7.0 54.4 18.0 Q 63.6 7.0 72.7 18.0 Q 81.8 7.0 90.9 18.0 Q 100.0 7.0 109.1 18.0 Q 118.2 7.0 127.3 18.0 Q 136.4 7.0 145.6 18.0 Q 154.7 7.0 163.8 18.0 Q 172.9 7.0 182.0 18.0 Q 193.0 28.2 182.0 38.3 Q 193.0 48.5 182.0 58.7 Q 193.0 68.8 182.0 79.0 Q 193.0 89.2 182.0 99.3 Q 193.0 109.5 182.0 119.7 Q 193.0 129.8 182.0 140.0 Q 193.0 150.2 182.0 160.3 Q 193.0 170.5 182.0 180.7 Q 193.0 190.8 182.0 201.0 Q 193.0 211.2 182.0 221.3 Q 193.0 231.5 182.0 241.7 Q 193.0 251.8 182.0 262.0 Q 172.9 273.0 163.8 262.0 Q 154.7 273.0 145.6 262.0 Q 136.4 273.0 127.3 262.0 Q 118.2 273.0 109.1 262.0 Q 100.0 273.0 90.9 262.0 Q 81.8 273.0 72.7 262.0 Q 63.6 273.0 54.4 262.0 Q 45.3 273.0 36.2 262.0 Q 27.1 273.0 18.0 262.0 Q 7.0 251.8 18.0 241.7 Q 7.0 231.5 18.0 221.3 Q 7.0 211.2 18.0 201.0 Q 7.0 190.8 18.0 180.7 Q 7.0 170.5 18.0 160.3 Q 7.0 150.2 18.0 140.0 Q 7.0 129.8 18.0 119.7 Q 7.0 109.5 18.0 99.3 Q 7.0 89.2 18.0 79.0 Q 7.0 68.8 18.0 58.7 Q 7.0 48.5 18.0 38.3 Q 7.0 28.2 18.0 18.0 Z"/>
+            </svg>
+            <div class="shot-wrap">
+              <img class="shot" src="photo.jpg" alt="Kaif's birthday portrait">
+            </div>
+          </div>
+
+          <!-- Arched "MY BOY" text -->
+          <svg class="myboy" viewBox="0 0 230 110" aria-hidden="true">
+            <defs>
+              <path id="boyarc" d="M 18 86 Q 116 6 214 74" fill="none"/>
+            </defs>
+            <text font-family="'Luckiest Guy', sans-serif" font-size="36" fill="#162638" stroke="#ffffff" stroke-width="7" paint-order="stroke fill" stroke-linejoin="round">
+              <textPath href="#boyarc" startOffset="50%" text-anchor="middle">MY BOY</textPath>
+            </text>
+          </svg>
+
+          <!-- Flat 2D Camera -->
+          <svg class="camera" viewBox="0 0 130 96" aria-hidden="true">
+            <rect x="10" y="32" width="110" height="54" rx="10" fill="#f7f5ed" stroke="#162638" stroke-width="3.5"/>
+            <rect x="34" y="16" width="40" height="20" rx="4" fill="#3d86e6" stroke="#162638" stroke-width="3.5"/>
+            <circle cx="66" cy="59" r="20" fill="#69aee8" stroke="#162638" stroke-width="3.5"/>
+            <circle cx="66" cy="59" r="11" fill="#162638"/>
+            <circle cx="62" cy="55" r="3.2" fill="#ffffff"/>
+            <circle cx="104" cy="46" r="5.5" fill="#ef4b4b" stroke="#162638" stroke-width="2.5"/>
+            <rect x="18" y="42" width="18" height="9" rx="2" fill="#ffd24a" stroke="#162638" stroke-width="2.5"/>
+          </svg>
+        </div>
+
+        <!-- Blooming "HAPPY BIRTHDAY" -->
+        <div class="greeting" aria-label="Happy Birthday">
+          <!-- Sharp flat 2D confetti bits -->
+          <i class="flat-bit star" style="--x:-16cqw; --y:-8cqw; --rot:18deg; --d:0s; --c:#ffd24a"></i>
+          <i class="flat-bit" style="--x:15cqw; --y:-8cqw; --rot:32deg; --c:#ef4d4d; --d:.04s"></i>
+          <i class="flat-bit dot" style="--x:-12cqw; --y:7cqw; --rot:0deg; --c:#3d86e6; --d:.02s"></i>
+          <i class="flat-bit" style="--x:18cqw; --y:3cqw; --rot:-24deg; --c:#3cba78; --d:.08s"></i>
+          <i class="flat-bit star" style="--x:8cqw; --y:-12cqw; --rot:-12deg; --d:.06s; --c:#ffd24a"></i>
+          <i class="flat-bit" style="--x:11cqw; --y:10cqw; --rot:16deg; --c:#ffd24a; --d:.1s"></i>
+          <i class="flat-bit dot" style="--x:-7cqw; --y:-11cqw; --rot:0deg; --c:#ef4d4d; --d:.03s"></i>
+          <i class="flat-bit" style="--x:20cqw; --y:-2cqw; --rot:48deg; --c:#f08a24; --d:.07s"></i>
+          <i class="flat-bit star" style="--x:-9cqw; --y:11cqw; --rot:22deg; --d:.09s; --c:#ffd24a"></i>
+          <i class="flat-bit dot" style="--x:14cqw; --y:8cqw; --rot:0deg; --c:#3d86e6; --d:.11s"></i>
+
+          <div class="greeting-inner">
+            <!-- Left Party Popper -->
+            <svg class="popper left" viewBox="0 0 80 80" aria-hidden="true">
+              <g transform="rotate(-28 30 48)">
+                <polygon points="8,62 30,52 18,30" fill="#49b7e8" stroke="#162638" stroke-width="2.6" stroke-linejoin="round"/>
+                <polygon points="18,30 30,52 46,28" fill="#ffd24a" stroke="#162638" stroke-width="2.6" stroke-linejoin="round"/>
+                <polygon points="16,34 22,48 10,44" fill="#ef4d4d" stroke="#162638" stroke-width="2.2"/>
+              </g>
+              <circle cx="52" cy="20" r="4.2" fill="#ef4d4d" stroke="#162638" stroke-width="1.8"/>
+              <circle cx="64" cy="30" r="3" fill="#3cba78" stroke="#162638" stroke-width="1.5"/>
+              <circle cx="58" cy="14" r="2.4" fill="#3d86e6"/>
+            </svg>
+
+            <!-- Right Party Popper -->
+            <svg class="popper right" viewBox="0 0 80 80" aria-hidden="true">
+              <g transform="translate(80 0) scale(-1 1) rotate(-28 30 48)">
+                <polygon points="8,62 30,52 18,30" fill="#f08a24" stroke="#162638" stroke-width="2.6" stroke-linejoin="round"/>
+                <polygon points="18,30 30,52 46,28" fill="#49b7e8" stroke="#162638" stroke-width="2.6" stroke-linejoin="round"/>
+                <polygon points="16,34 22,48 10,44" fill="#ffd24a" stroke="#162638" stroke-width="2.2"/>
+              </g>
+              <circle cx="22" cy="18" r="4" fill="#3d86e6" stroke="#162638" stroke-width="1.8"/>
+              <circle cx="14" cy="30" r="2.8" fill="#ef4d4d" stroke="#162638" stroke-width="1.5"/>
+            </svg>
+
+            <div class="happy-line">
+              <span class="tile">H</span>
+              <span class="tile">A</span>
+              <span class="tile">P</span>
+              <span class="tile">P</span>
+              <span class="tile">Y</span>
+            </div>
+            <div class="bday-line" id="bdayText">BIRTHDAY</div>
+          </div>
+        </div>
+
+        <button class="skip-btn" id="skipOpeningBtn" type="button">Next &rarr;</button>
+        <div class="sound-hint" id="soundHint">🎵 Tap for Birthday Music!</div>
+      </section>
+
+      <!-- ==========================================
+           VIEW 2: CAKE PAGE
+           ========================================== -->
+      <section class="view" id="view-cake" aria-label="Blow out the candles">
+        <img class="card-art" src="cake-card.jpg" alt="Blow out the Candles! Happy Birthday Kaif with dogs and cake">
+        <div id="candleSmokeLayer" aria-hidden="true"></div>
+        <div id="cakeConfettiLayer" aria-hidden="true"></div>
+
+        <div class="cake-prompt" id="cakePrompt">Tap to blow out candles! 🎂</div>
+        <button class="cake-btn" id="cakeBtn" type="button" aria-label="Blow out the candles"></button>
+        <p class="wish-badge" id="wishBadge">Make a wish, Kaif!</p>
+      </section>
+
+      <!-- ==========================================
+           VIEW 3: GIFTS PAGE
+           ========================================== -->
+      <section class="view" id="view-gifts" aria-label="Accept your gifts">
+        <img class="card-art" src="gifts-card.jpg" alt="Accept your gifts, Kaif? A kitten holding gifts">
+        <div class="no-patch" aria-hidden="true"></div>
+        <div id="giftsConfettiLayer" aria-hidden="true"></div>
+
+        <button class="choice-btn yes" id="yesBtn" type="button">YES</button>
+        <button class="choice-btn no" id="noBtn" type="button">NO</button>
+        <p class="gifts-note" id="giftsNote">They're all yours, Kaif! 🎉</p>
+      </section>
+
+      <!-- ==========================================
+           VIEW 4: CHOOSE GIFTS PAGE
+           ========================================== -->
+      <section class="view" id="view-choose" aria-label="Choose your gifts">
+        <img class="card-art" src="choose-card.jpg" alt="Yay! Choose your gifts, Kaif! Letter, flowers, and presents">
+
+        <button class="gift-target g1" id="gift1Btn" type="button" aria-label="Gift 1: The Letter"></button>
+        <span class="gift-badge badge-g1">💌 Gift 1: The Letter</span>
+
+        <button class="gift-target g2" id="gift2Btn" type="button" aria-label="Gift 2: The Flowers"></button>
+        <span class="gift-badge badge-g2">💐 Gift 2: The Flowers</span>
+
+        <button class="gift-target g3" id="gift3Btn" type="button" aria-label="Gift 3: The Presents"></button>
+        <span class="gift-badge badge-g3">🎁 Gift 3: The Scrapbook</span>
+      </section>
+
+      <!-- ==========================================
+           VIEW 5: GIFT 1 — LETTER CARD
+           ========================================== -->
+      <section class="view" id="view-letter" aria-label="Letter Card">
+        <img class="card-art" src="letter-card.jpg" alt="Happy Birthday to my Favorite Person! Love letter with photos and flowers">
+      </section>
+
+      <!-- ==========================================
+           VIEW 6: GIFT 2 — FLOWERS CARD
+           ========================================== -->
+      <section class="view" id="view-flowers" aria-label="Flowers Card">
+        <img class="card-art" src="flowers-card.jpg" alt="Some flowers for you! Photo strip and kitten with birthday bouquet">
+      </section>
+
+      <!-- ==========================================
+           VIEW 7: GIFT 3 — SCRAPBOOK CARD
+           ========================================== -->
+      <section class="view" id="view-scrapbook" aria-label="Scrapbook Card">
+        <img class="card-art" src="scrapbook-card.jpg" alt="Scrapbook card with photos, notes, teddy bear, and raccoon">
+      </section>
+
+    </div>
+  </main>
+
+  </div><!-- /.app-frame -->
+
+  <!-- Load Web Audio Birthday Music Engine -->
+  <script src="music.js"></script>
+
+  <!-- Page Navigation, Interactivity & Animations -->
+  <script>
+    (function () {
+      // Views Sequence & Mapping
+      const views = {
+        opening: document.getElementById("view-opening"),
+        cake: document.getElementById("view-cake"),
+        gifts: document.getElementById("view-gifts"),
+        choose: document.getElementById("view-choose"),
+        letter: document.getElementById("view-letter"),
+        flowers: document.getElementById("view-flowers"),
+        scrapbook: document.getElementById("view-scrapbook")
+      };
+
+      const navBackBtn = document.getElementById("navBackBtn");
+      let currentView = "opening";
+      let autoAdvanceTimer = null;
+
+      // View Navigation Router
+      function showView(viewName, addToHistory = true) {
+        if (!views[viewName]) return;
+
+        // Hide all views
+        Object.keys(views).forEach(key => {
+          views[key].classList.remove("active");
+        });
+
+        // Show target view
+        views[viewName].classList.add("active");
+        currentView = viewName;
+
+        // Update Back Button visibility
+        if (viewName === "opening") {
+          navBackBtn.style.display = "none";
+        } else {
+          navBackBtn.style.display = "inline-flex";
+        }
+
+        // Push history state if requested
+        if (addToHistory) {
+          const hash = "#" + viewName;
+          if (window.location.hash !== hash) {
+            history.pushState({ view: viewName }, "", hash);
+          }
+        }
+
+        // Start music on first view navigation if not already playing
+        if (window.BirthdayMusic) {
+          window.BirthdayMusic.start();
+        }
+      }
+
+      // Back Button Handler
+      function goBack() {
+        if (currentView === "cake") {
+          showView("opening");
+        } else if (currentView === "gifts") {
+          showView("cake");
+        } else if (currentView === "choose") {
+          showView("gifts");
+        } else if (currentView === "letter" || currentView === "flowers" || currentView === "scrapbook") {
+          showView("choose");
+        }
+      }
+
+      navBackBtn.addEventListener("click", goBack);
+
+      // Browser Back/Forward Popstate
+      window.addEventListener("popstate", function (e) {
+        const hash = window.location.hash.replace("#", "");
+        if (hash && views[hash]) {
+          showView(hash, false);
+        } else {
+          showView("opening", false);
+        }
+      });
+
+      // --- PAGE 1: OPENING CARD LOGIC ---
+      const skipOpeningBtn = document.getElementById("skipOpeningBtn");
+      const soundHint = document.getElementById("soundHint");
+
+      function advanceFromOpening() {
+        if (currentView !== "opening") return;
+        clearTimeout(autoAdvanceTimer);
+        showView("cake");
+      }
+
+      skipOpeningBtn.addEventListener("click", advanceFromOpening);
+
+      // Dismiss sound hint when user interacts
+      soundHint.addEventListener("click", function () {
+        if (window.BirthdayMusic) window.BirthdayMusic.start();
+        soundHint.style.display = "none";
+      });
+
+      window.addEventListener("pointerdown", function () {
+        soundHint.style.display = "none";
+      }, { once: true });
+
+      // Automatically advance to Cake page after "HAPPY BIRTHDAY" blooms out
+      const bdayText = document.getElementById("bdayText");
+      bdayText.addEventListener("animationend", function () {
+        autoAdvanceTimer = setTimeout(function () {
+          advanceFromOpening();
+        }, 2200);
+      });
+
+      // Fallback timer in case animations are skipped or reduced
+      autoAdvanceTimer = setTimeout(function () {
+        advanceFromOpening();
+      }, 7600);
+
+      // --- PAGE 2: CAKE PAGE LOGIC ---
+      const cakeBtn = document.getElementById("cakeBtn");
+      const cakePrompt = document.getElementById("cakePrompt");
+      const viewCake = document.getElementById("view-cake");
+      const candleSmokeLayer = document.getElementById("candleSmokeLayer");
+      const cakeConfettiLayer = document.getElementById("cakeConfettiLayer");
+
+      const candleWickSpots = [
+        { x: 43.0, y: 54.6 },
+        { x: 45.6, y: 54.2 },
+        { x: 48.2, y: 54.5 },
+        { x: 50.9, y: 54.1 },
+        { x: 53.5, y: 54.4 },
+        { x: 56.2, y: 54.0 },
+        { x: 58.8, y: 54.5 }
+      ];
+
+      // Create smoke puff elements
+      candleWickSpots.forEach(function (spot, i) {
+        const puff = document.createElement("span");
+        puff.className = "smoke-puff";
+        puff.style.left = spot.x + "%";
+        puff.style.top = spot.y + "%";
+        puff.style.setProperty("--d", (i * 0.08) + "s");
+        candleSmokeLayer.appendChild(puff);
+      });
+
+      const confettiColors = ["#ef4d4d", "#ffd24a", "#3cba78", "#3d86e6", "#f08a24", "#a364f7", "#2ec4c0"];
+
+      function blowOutCandles() {
+        if (viewCake.classList.contains("blown")) return;
+        viewCake.classList.add("blown");
+        cakeBtn.disabled = true;
+        cakePrompt.style.display = "none";
+
+        // Confetti burst from cake
+        for (let i = 0; i < 32; i++) {
+          const bit = document.createElement("i");
+          const isDot = i % 3 === 0;
+          bit.className = "flat-bit" + (isDot ? " dot" : "");
+          bit.style.left = (42 + Math.random() * 18) + "%";
+          bit.style.top = "56%";
+          bit.style.setProperty("--c", confettiColors[i % confettiColors.length]);
+          bit.style.setProperty("--x", ((Math.random() * 38) - 19) + "cqw");
+          bit.style.setProperty("--y", ((Math.random() * -24) - 4) + "cqw");
+          bit.style.setProperty("--rot", (Math.random() * 260 - 50) + "deg");
+          bit.style.setProperty("--d", (Math.random() * 0.12) + "s");
+          cakeConfettiLayer.appendChild(bit);
+        }
+
+        // Wait for wish message and confetti, then advance to Gifts page
+        setTimeout(function () {
+          showView("gifts");
+        }, 2400);
+      }
+
+      cakeBtn.addEventListener("click", blowOutCandles);
+
+      // --- PAGE 3: GIFTS PAGE LOGIC ---
+      const yesBtn = document.getElementById("yesBtn");
+      const noBtn = document.getElementById("noBtn");
+      const giftsNote = document.getElementById("giftsNote");
+      const giftsConfettiLayer = document.getElementById("giftsConfettiLayer");
+      let giftsAccepted = false;
+
+      function dodgeNo(e) {
+        if (giftsAccepted) return;
+        if (e && e.cancelable) e.preventDefault();
+
+        // Safe boundaries within the card
+        let newX = 8 + Math.random() * 66;
+        let newY = 8 + Math.random() * 62;
+
+        // Keep away from YES button area (left 20-45%, top 62-86%)
+        if (newX > 18 && newX < 46 && newY > 58) {
+          newX = Math.random() < 0.5 ? 8 : 72;
+          newY = 14 + Math.random() * 42;
+        }
+
+        noBtn.style.left = newX + "%";
+        noBtn.style.top = newY + "%";
+      }
+
+      noBtn.addEventListener("mouseenter", dodgeNo);
+      noBtn.addEventListener("mouseover", dodgeNo);
+      noBtn.addEventListener("pointerdown", dodgeNo);
+      noBtn.addEventListener("touchstart", dodgeNo, { passive: false });
+      noBtn.addEventListener("click", dodgeNo);
+      noBtn.addEventListener("focus", dodgeNo);
+
+      function acceptGifts() {
+        if (giftsAccepted) return;
+        giftsAccepted = true;
+        yesBtn.disabled = true;
+        noBtn.disabled = true;
+
+        // Burst celebratory confetti
+        for (let i = 0; i < 28; i++) {
+          const bit = document.createElement("i");
+          bit.className = "flat-bit" + (i % 3 === 0 ? " dot" : "");
+          bit.style.left = "34%";
+          bit.style.top = "78%";
+          bit.style.setProperty("--c", confettiColors[i % confettiColors.length]);
+          bit.style.setProperty("--x", ((Math.random() * 40) - 20) + "cqw");
+          bit.style.setProperty("--y", ((Math.random() * -24) - 6) + "cqw");
+          bit.style.setProperty("--rot", (Math.random() * 300) + "deg");
+          bit.style.setProperty("--d", (Math.random() * 0.1) + "s");
+          giftsConfettiLayer.appendChild(bit);
+        }
+
+        giftsNote.classList.add("show");
+
+        setTimeout(function () {
+          showView("choose");
+        }, 1100);
+      }
+
+      yesBtn.addEventListener("click", acceptGifts);
+
+      // --- PAGE 4: CHOOSE GIFTS PAGE LOGIC ---
+      document.getElementById("gift1Btn").addEventListener("click", function () {
+        showView("letter");
+      });
+      document.getElementById("gift2Btn").addEventListener("click", function () {
+        showView("flowers");
+      });
+      document.getElementById("gift3Btn").addEventListener("click", function () {
+        showView("scrapbook");
+      });
+
+      // Handle Initial Load Hash (e.g. #cake, #gifts, #choose, #letter, etc.)
+      const initialHash = window.location.hash.replace("#", "");
+      if (initialHash && views[initialHash]) {
+        showView(initialHash, false);
+      } else {
+        showView("opening", false);
+      }
+
+      // Progressive Web App: install prompt + offline cache
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", function () {
+          navigator.serviceWorker.register("./sw.js").catch(function () {});
+        });
+      }
+
+      let deferredInstall = null;
+      const installBanner = document.getElementById("installBanner");
+      const installBtn = document.getElementById("installBtn");
+      const installDismiss = document.getElementById("installDismiss");
+
+      window.addEventListener("beforeinstallprompt", function (event) {
+        event.preventDefault();
+        deferredInstall = event;
+        if (!window.matchMedia("(display-mode: standalone)").matches) {
+          installBanner.classList.add("show");
+        }
+      });
+
+      installBtn.addEventListener("click", async function () {
+        if (!deferredInstall) return;
+        deferredInstall.prompt();
+        try { await deferredInstall.userChoice; } catch (e) {}
+        deferredInstall = null;
+        installBanner.classList.remove("show");
+      });
+
+      installDismiss.addEventListener("click", function () {
+        installBanner.classList.remove("show");
+      });
+
+      window.addEventListener("appinstalled", function () {
+        installBanner.classList.remove("show");
+        deferredInstall = null;
+      });
+
+      // Prefer real landscape on phones (PWA / fullscreen), keep CSS rotate as fallback
+      function lockLandscape() {
+        const orientation = screen.orientation || screen.mozOrientation || screen.msOrientation;
+        if (orientation && typeof orientation.lock === "function") {
+          orientation.lock("landscape").catch(function () {});
+        } else if (typeof screen.lockOrientation === "function") {
+          try { screen.lockOrientation("landscape"); } catch (e) {}
+        } else if (typeof screen.mozLockOrientation === "function") {
+          try { screen.mozLockOrientation("landscape"); } catch (e) {}
+        }
+      }
+
+      lockLandscape();
+      window.addEventListener("orientationchange", lockLandscape);
+      document.addEventListener("visibilitychange", function () {
+        if (!document.hidden) lockLandscape();
+      });
+      window.addEventListener("pointerdown", lockLandscape, { once: true });
+    })();
+  </script>
+</body>
+</html>
